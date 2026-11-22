@@ -5,9 +5,12 @@ import matplotlib.pyplot as plt
 class CampanaPruebas: 
     def __init__(self, defectos):
 
+        # semanas
         self.s = np.array(defectos["semanas"], dtype=float)
+        # defectos sumados semana tras semana
         self.d = np.array(defectos["defectos_sum"], dtype=float)
-
+        
+        #R1
         self.fiabilidad = None
         self.a = None
         self.b = None
@@ -26,6 +29,13 @@ class CampanaPruebas:
         # R² = 1 significa ajuste perfecto; 0 significa que el modelo no aporta nada
         return 1 - error / total
 
+    def calcular_sem_95(self):
+        #Formula en la guía del parcial
+        return np.log(20) / self.b
+
+    def procentaje(self): 
+        return 100 * self.d[-1] / self.a;
+
     def ajustar(self):
         semilla = [max(self.d) * 1.3, 0.2]
         # a no puede ser menor que las correcciones ya hechas; b siempre positivo
@@ -38,12 +48,16 @@ class CampanaPruebas:
                            "R2": self.r_cuadrado(self.d, estimados),
                            "encontradas": self.d[-1],
                            "restantes": self.restantes(),
-                           "porcentaje": 100 * self.d[-1] / self.a, 
-                           "semana95" : np.log(20) / self.b
+                           "porcentaje": self.procentaje(), 
+                           "semana95" : self.calcular_sem_95()
                            }
         return self.fiabilidad
 
+  
+
     def informe(self):
+
+        #Mostrar resultado resumido
         f = self.fiabilidad
 
         print("FIABILIDAD — modelo de Goel-Okumoto")
@@ -60,9 +74,7 @@ class CampanaPruebas:
         f = self.fiabilidad
 
         ejes.plot(self.s, self.d, color="blue", linewidth=1, label="Defectos reales")
-
-
-        
+  
         ejes.plot(self.s, self.goel(self.s, f["a"], f["b"]),
                         color="#8B151A", linewidth=0.8, label="Modelo Goel-Okumoto")
 
@@ -73,8 +85,8 @@ class CampanaPruebas:
         ejes.set_title(f"Fiabilidad   (R² = {f['R2']:.3f})")
         ejes.legend(fontsize=9)
         ejes.grid(True)
-        # Título general de la figura
-        figura.suptitle(titulo or self.repo.carpeta, fontsize=13)
+        figura.suptitle(titulo , fontsize=13)
         plt.tight_layout()
         plt.show()
+        #Guardar la grafica
         figura.savefig("graficas/resultado.png", dpi=300, bbox_inches="tight")
